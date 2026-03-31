@@ -7,8 +7,4 @@ connection = pymysql.connect(user="root",
                        database="trading_sim",
                        cursorclass=pymysql.cursors.DictCursor)
 
-with connection.cursor() as cursor:
-    sql = "SHOW TABLES"
-    cursor.execute(sql)
-    result = cursor.fetchall()
-    print(result)
+cursor = connection.cursor()
