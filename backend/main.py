@@ -3,10 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from routes.portfolio import portfolio_router
 from routes.orders import orders_router
+from routes.players import players_router
 
 app = FastAPI()
 app.include_router(portfolio_router)
 app.include_router(orders_router)
+app.include_router(players_router)
 
 origins = [
     "http://localhost:5173",
