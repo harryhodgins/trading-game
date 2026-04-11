@@ -16,6 +16,19 @@ async def get_players():
     else:
         raise(HTTPException(status_code=404,detail="Failed to fetch players"))
     
+@players_router.get("/players/{player_id}")
+async def get_player_by_id(player_id: int):
+    sql = "SELECT * FROM players WHERE player_id = %s"
+
+    cursor.execute(sql, player_id)
+    result = cursor.fetchone()
+    connection.commit()
+
+    if result:
+        return result
+    else:
+        raise(HTTPException(status_code=404,detail="Failed to fetch player"))
+    
 @players_router.post("/players")
 async def add_player(playerName: str, isBot: bool = False, balance: float = 10000.00):
     

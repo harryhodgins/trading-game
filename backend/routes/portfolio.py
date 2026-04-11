@@ -13,19 +13,33 @@ async def get_portfolio():
 
     return result
 
-@portfolio_router.get("/portfolio/{ticker}")
-async def get_portfolio_by_ticker(ticker):
-    sql = "SELECT * FROM portfolio WHERE ticker = %s"
+# @portfolio_router.get("/portfolio/{ticker}")
+# async def get_portfolio_by_ticker(ticker):
+#     sql = "SELECT * FROM portfolio WHERE ticker = %s"
 
-    cursor.execute(sql,(ticker))
-    connection.commit()
+#     cursor.execute(sql,(ticker))
+#     connection.commit()
 
+#     result = cursor.fetchall()
+
+#     if result:
+#         return result
+#     else:
+#         raise(HTTPException(status_code=404, detail="Portfolio entry not found"))
+
+@portfolio_router.get("/portfolio/{player_id}")
+async def get_portfolio_by_player_id(player_id: int):
+    sql = """
+    SELECT * FROM portfolio WHERE player_id = %s
+    """
+
+    cursor.execute(sql, player_id)
     result = cursor.fetchall()
-
+    connection.commit()
     if result:
         return result
     else:
-        raise(HTTPException(status_code=404, detail="Portfolio entry not found"))
+        raise(HTTPException(status_code="404",detail=f"Player with id {player_id} not found"))
 
 @portfolio_router.delete("/portfolio/{ticker}")
 async def delete_portfolio_by_ticker(ticker):
