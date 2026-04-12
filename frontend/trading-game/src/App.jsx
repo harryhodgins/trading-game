@@ -1,121 +1,124 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState, useEffect } from "react";
+import "./App.css";
+import { useGameEngine } from "./useGameEngine";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [player, setPlayer] = useState(null);
+  const [playerId, setPlayerId] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [players, setPlayers] = useState([]);
+  const [newPlayerName, setNewPlayerName] = useState("");
+  const [newPlayerBalance, setNewPlayerBalance] = useState(10000);
+
+  const { round, currentPrice, signal, timeLeft, phase } =
+    useGameEngine(player);
+
+  const fetchPlayer = async (player_id) => {
+    const response = await fetch(`http://localhost:8000/players/${player_id}`);
+    const data = await response.json();
+    setPlayer(data);
+  };
+
+  const fetchAllPlayers = async () => {
+    const response = await fetch(`http://localhost:8000/players`);
+    if (response.ok) {
+      const data = await response.json();
+      setPlayers(data);
+    }
+  };
+
+  const createPlayer = async () => {
+    if (!newPlayerName) return;
+    const response = await fetch(
+      `http://localhost:8000/players?playerName=${newPlayerName}&balance=${newPlayerBalance}`,
+      { method: "POST" },
+    );
+    if (response.ok) {
+      const allPlayers = await fetch(`http://localhost:8000/players`);
+      const data = await allPlayers.json();
+      const created = data.find((p) => p.player_name === newPlayerName);
+      if (created) fetchPlayer(created.player_id);
+    }
+  };
+
+  const placeOrder = async (quantity, type) => {
+    if (!player) return;
+    const response = await fetch(
+      `http://localhost:8000/orders?ticker=DUMMY_STOCK&quantity=${quantity}&type=${type}&player_id=${player.player_id}&price=${currentPrice}`,
+      { method: "POST" },
+    );
+    const data = await response.json();
+    fetchPlayer(player.player_id);
+  };
+
+  useEffect(() => {
+    if (!player) fetchAllPlayers();
+  }, [player]);
 
   return (
     <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+      {player && (
+        <div className="player-info">
+          <p>{player.player_name}</p>
+          <p>${player.balance}</p>
         </div>
+      )}
+
+      <h1>Trading Game</h1>
+
+      {player === null ? (
+        <div className="login-screen">
+          <div className="existing-players">
+            <h2>Select Player</h2>
+            {players.length === 0 && <p>No players yet</p>}
+            {players.map((p) => (
+              <button
+                key={p.player_id}
+                onClick={() => fetchPlayer(p.player_id)}
+              >
+                id: {p.player_id} — {p.player_name} (${p.balance})
+              </button>
+            ))}
+          </div>
+
+          <div className="create-player">
+            <h2>Create New Player</h2>
+            <input
+              placeholder="Name"
+              value={newPlayerName}
+              onChange={(e) => setNewPlayerName(e.target.value)}
+            />
+            <input
+              type="number"
+              placeholder="Starting balance"
+              value={newPlayerBalance}
+              onChange={(e) => setNewPlayerBalance(e.target.value)}
+            />
+            <button onClick={createPlayer}>Create & Play</button>
+          </div>
+        </div>
+      ) : (
         <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
+          <p>Round {round}</p>
+          <p>Current Price: ${currentPrice}</p>
+          {signal && (
+            <p>
+              Signal: {signal.upChance}% chance of +${signal.upAmount},{" "}
+              {signal.downChance}% chance of -${signal.downAmount}
+            </p>
+          )}
+          <p>Time Left: {timeLeft}</p>
+          <input
+            type="number"
+            value={quantity || ""}
+            onChange={(e) => setQuantity(e.target.value)}
+          />
+          <button onClick={() => placeOrder(quantity, "BUY")}>BUY</button>
+          <button onClick={() => placeOrder(quantity, "SELL")}>SELL</button>
         </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
+      )}
     </>
-  )
+  );
 }
 
-export default App
+export default App;

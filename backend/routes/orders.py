@@ -46,7 +46,7 @@ async def get_orders_by_id(id):
         raise(HTTPException(status_code=404,detail=f"Order id {id} not found"))
 
 @orders_router.post("/orders")
-async def add_order(ticker, quantity, type, player_id):
+async def add_order(ticker, quantity, type, player_id, price: float = None):
     check_player_exists = "SELECT * FROM players WHERE player_id = %s"
     cursor.execute(check_player_exists, player_id)
     check_player = cursor.fetchone()
@@ -61,11 +61,13 @@ async def add_order(ticker, quantity, type, player_id):
     VALUES (%s, %s, %s, %s, %s, %s);
     """
 
-    live_price = get_live_price(ticker)
+    if price is None:
+        live_price = get_live_price(ticker)
+    else:
+        live_price = price
+
     value = live_price * int(quantity)
     values = (str(ticker).upper(), quantity, order_type, value, live_price, player_id)
-
-    cursor.execute(sql_orders, values)
 
     sql_portfolio_new = """
     INSERT INTO PORTFOLIO (ticker, quantity, player_id)
@@ -110,6 +112,7 @@ async def add_order(ticker, quantity, type, player_id):
     else:
         cursor.execute(sql_portfolio_new, (str(ticker).upper(), quantity, player_id))
         cursor.execute(sql_update_player_balance, (balance_change, player_id))
+    cursor.execute(sql_orders, values)
     connection.commit()
     return({"message": f"Placed order for {str(ticker).upper()}"})
     
