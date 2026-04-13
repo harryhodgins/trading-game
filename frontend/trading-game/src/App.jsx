@@ -72,12 +72,14 @@ function App() {
             <h2>Select Player</h2>
             {players.length === 0 && <p>No players yet</p>}
             {players.map((p) => (
-              <button
+              <div
                 key={p.player_id}
+                className="player-row"
                 onClick={() => fetchPlayer(p.player_id)}
               >
-                id: {p.player_id} — {p.player_name} (${p.balance})
-              </button>
+                <span>{p.player_name}</span>
+                <span className="bal">${Number(p.balance).toFixed(2)}</span>
+              </div>
             ))}
           </div>
 
@@ -94,7 +96,7 @@ function App() {
               value={newPlayerBalance}
               onChange={(e) => setNewPlayerBalance(e.target.value)}
             />
-            <button onClick={createPlayer}>Create & Play</button>
+            <button className="btn-create" onClick={createPlayer}>Create & Play</button>
           </div>
         </div>
       ) : (
