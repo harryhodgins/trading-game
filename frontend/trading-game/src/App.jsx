@@ -57,13 +57,6 @@ function App() {
 
   return (
     <>
-      {player && (
-        <div className="player-info">
-          <p>{player.player_name}</p>
-          <p>${player.balance}</p>
-        </div>
-      )}
-
       <h1>Trading Game</h1>
 
       {player === null ? (
@@ -101,6 +94,7 @@ function App() {
         </div>
       ) : (
         <div>
+          <p>Balance: ${player.balance}</p>
           <p>Round {round}</p>
           <p>Current Price: ${currentPrice}</p>
           {signal && (
